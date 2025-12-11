@@ -13,6 +13,32 @@ function App() {
   const [multiplicador, setMultiplicador] = useState("NORMAL"); // NORMAL, DOBRAR, TRIPLICAR
   
   const [valorFinal, setValorFinal] = useState(null); // Resultado do cálculo
+  
+  const [novoMaterialNome, setNovoMaterialNome] = useState("");
+  const [novoMaterialPreco, setNovoMaterialPreco] = useState("");
+
+  const cadastrarMaterial = () => {
+    if (!novoMaterialNome || !novoMaterialPreco) {
+      alert("Preencha nome e preço!");
+      return;
+    }
+
+    const novo = {
+      name: novoMaterialNome, // Usando 'name' para bater com seu Java
+      precoCusto: parseFloat(novoMaterialPreco)
+    };
+
+    axios.post("http://localhost:8080/api/materiais", novo)
+      .then(resposta => {
+        alert("Material cadastrado com sucesso!");
+        // Adiciona o novo material na lista que já está na tela
+        setMateriaisBanco([...materiaisBanco, resposta.data]);
+        // Limpa os campos
+        setNovoMaterialNome("");
+        setNovoMaterialPreco("");
+      })
+      .catch(erro => alert("Erro ao cadastrar: " + erro));
+  };
 
   // --- 1. BUSCAR MATERIAIS NO JAVA (Ao carregar a tela) ---
   useEffect(() => {
@@ -58,16 +84,51 @@ function App() {
   };
 
   // --- 4. TELA (HTML) ---
+  // --- 4. TELA (HTML) ---
   return (
     <div className="container mt-4 mb-5">
       <h2 className="text-center mb-4">💰 Orçamento Marcenaria</h2>
 
-      {/* CARD 1: Adicionar Materiais */}
+      {/* --- BLOCO 1: CADASTRAR NOVO MATERIAL (Separado e no topo) --- */}
+      <div className="card shadow-sm mb-4 border-warning">
+        <div className="card-header bg-warning text-dark fw-bold">
+          🛠️ Cadastrar Novo Material (Banco de Dados)
+        </div>
+        <div className="card-body">
+          <div className="row">
+            <div className="col-md-5">
+              <input 
+                type="text" 
+                className="form-control" 
+                placeholder="Nome do Material (Ex: Cola Branca)"
+                value={novoMaterialNome}
+                onChange={e => setNovoMaterialNome(e.target.value)}
+              />
+            </div>
+            <div className="col-md-3">
+              <input 
+                type="number" 
+                className="form-control" 
+                placeholder="Preço (R$)"
+                value={novoMaterialPreco}
+                onChange={e => setNovoMaterialPreco(e.target.value)}
+              />
+            </div>
+            <div className="col-md-4">
+              <button className="btn btn-outline-dark w-100" onClick={cadastrarMaterial}>
+                Salvar no Estoque
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- BLOCO 2: MONTAR O ORÇAMENTO --- */}
       <div className="card shadow-sm mb-4">
-        <div className="card-header bg-primary text-white">1. Adicionar Materiais</div>
+        <div className="card-header bg-primary text-white">1. Adicionar ao Orçamento</div>
         <div className="card-body">
           <div className="mb-3">
-            <label>Material:</label>
+            <label>Escolha o Material:</label>
             <select className="form-select" onChange={e => setMaterialSelecionadoId(e.target.value)}>
               <option value="">Selecione...</option>
               {materiaisBanco.map(m => (
@@ -84,7 +145,7 @@ function App() {
               <input type="number" className="form-control" value={quantidade} onChange={e => setQuantidade(e.target.value)} />
             </div>
             <div className="col-6 d-flex align-items-end">
-              <button className="btn btn-success w-100" onClick={adicionarAoCarrinho}>+ Adicionar</button>
+              <button className="btn btn-success w-100" onClick={adicionarAoCarrinho}>+ Adicionar Item</button>
             </div>
           </div>
         </div>
@@ -105,7 +166,7 @@ function App() {
         </div>
       )}
 
-      {/* CARD 2: Configurações Finais */}
+      {/* CARD 3: Configurações Finais */}
       <div className="card shadow-sm bg-light">
         <div className="card-body">
           <h5 className="card-title">2. Fechamento</h5>
